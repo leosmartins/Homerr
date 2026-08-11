@@ -1,0 +1,135 @@
+name: homerr
+
+x-common-env: &common-env
+  PUID: "${PUID:-1000}"
+  PGID: "${PGID:-1000}"
+  TZ: "${TZ:-America/Sao_Paulo}"
+
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    ports:
+      - "7575:7575"
+    volumes:
+      - ./config/homarr:/app/data
+    environment:
+      <<: *common-env
+
+  plex:
+    image: linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      <<: *common-env
+      PLEX_CLAIM: "${PLEX_CLAIM:-}"
+    volumes:
+      - ./config/plex:/config
+      - ./media:/media
+      - ./downloads:/downloads
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/sonarr:/config
+      - ./downloads:/downloads
+      - ./media:/media
+
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    ports:
+      - "7878:7878"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/radarr:/config
+      - ./downloads:/downloads
+      - ./media:/media
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    ports:
+      - "6767:6767"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/bazarr:/config
+      - ./media:/media
+
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    ports:
+      - "9696:9696"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/prowlarr:/config
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    environment:
+      <<: *common-env
+    volumes:
+      - ./config/seerr:/app/config
+
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    environment:
+      <<: *common-env
+      WEBUI_PORT: "8080"
+    volumes:
+      - ./config/qbittorrent:/config
+      - ./downloads:/downloads
+
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8081:80/tcp"
+      - "443:443/tcp"
+    environment:
+      <<: *common-env
+      TZ: "${TZ:-America/Sao_Paulo}"
+      WEBPASSWORD: "${PIHOLE_PASSWORD:-admin}"
+    volumes:
+      - ./config/pihole/etc-pihole:/etc/pihole
+      - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: "86400"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
