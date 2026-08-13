@@ -41,6 +41,6 @@ Como resultado o script acrescenta ao final do arquivo `hosts` um bloco contendo
 # END homerr-hosts
 ```
 
-> **Observação ⚠️**
+> **⚠️ Observação ⚠️**
 > 
 > A execução do script é necessária em caso de não utilizar um DNS local, assim se tornando necessário um direcionamento manual para as rotas
