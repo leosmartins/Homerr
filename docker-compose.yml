@@ -133,3 +133,18 @@ services:
       WATCHTOWER_POLL_INTERVAL: "86400"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+# podem ser incluidos os containers:
+# tautulli
+# home assistant
+# node-red
+# next-cloud
+# cinephage -> alternativa para o ARR Stack
+# Jellyfin -> alternativa para o Plex
+
+# Alem disso, proximos passos:
+# Criar o roteamento do traefik para os containers
+# Adicionar o arquivo wildcard do Pi-Hole para o direcionamento do DNS com Traefik
+
+# Script para criar o arquivo .env com as variaveis de ambiente
+# Script para criar as pastas?
