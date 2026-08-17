@@ -6,6 +6,27 @@ x-common-env: &common-env
   TZ: "${TZ:-America/Sao_Paulo}"
 
 services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/traefik/traefik.yml:/traefik.yml:ro
+      - ./config/traefik/acme.json:/acme.json
+    environment:
+      <<: *common-env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`homerr.traefik`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    networks:
+      - homerrNet
+
   homarr:
     image: ghcr.io/homarr-labs/homarr:latest
     container_name: homarr
@@ -16,12 +37,19 @@ services:
       - ./config/homarr:/app/data
     environment:
       <<: *common-env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homarr.rule=Host(`homerr.homarr`)"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
+    networks:
+      - homerrNet
 
   plex:
     image: linuxserver/plex:latest
     container_name: plex
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "32400:32400"
     environment:
       <<: *common-env
       PLEX_CLAIM: "${PLEX_CLAIM:-}"
@@ -29,6 +57,12 @@ services:
       - ./config/plex:/config
       - ./media:/media
       - ./downloads:/downloads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`homerr.plex`)"
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
+    networks:
+      - homerrNet
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -42,6 +76,12 @@ services:
       - ./config/sonarr:/config
       - ./downloads:/downloads
       - ./media:/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`homerr.sonarr`)"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+    networks:
+      - homerrNet
 
   radarr:
     image: linuxserver/radarr:latest
@@ -55,6 +95,12 @@ services:
       - ./config/radarr:/config
       - ./downloads:/downloads
       - ./media:/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`homerr.radarr`)"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+    networks:
+      - homerrNet
 
   bazarr:
     image: linuxserver/bazarr:latest
@@ -67,6 +113,12 @@ services:
     volumes:
       - ./config/bazarr:/config
       - ./media:/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`homerr.bazarr`)"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+    networks:
+      - homerrNet
 
   prowlarr:
     image: linuxserver/prowlarr:latest
@@ -78,6 +130,12 @@ services:
       <<: *common-env
     volumes:
       - ./config/prowlarr:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`homerr.prowlarr`)"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+    networks:
+      - homerrNet
 
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
@@ -89,6 +147,12 @@ services:
       <<: *common-env
     volumes:
       - ./config/seerr:/app/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seerr.rule=Host(`homerr.seerr`)"
+      - "traefik.http.services.seerr.loadbalancer.server.port=5055"
+    networks:
+      - homerrNet
 
   qbittorrent:
     image: linuxserver/qbittorrent:latest
@@ -104,6 +168,12 @@ services:
     volumes:
       - ./config/qbittorrent:/config
       - ./downloads:/downloads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`homerr.qbittorrent`)"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+    networks:
+      - homerrNet
 
   pihole:
     image: pihole/pihole:latest
@@ -123,6 +193,12 @@ services:
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
     cap_add:
       - NET_ADMIN
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`homerr.pihole`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+    networks:
+      - homerrNet
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -133,18 +209,9 @@ services:
       WATCHTOWER_POLL_INTERVAL: "86400"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - homerrNet
 
-# podem ser incluidos os containers:
-# tautulli
-# home assistant
-# node-red
-# next-cloud
-# cinephage -> alternativa para o ARR Stack
-# Jellyfin -> alternativa para o Plex
-
-# Alem disso, proximos passos:
-# Criar o roteamento do traefik para os containers
-# Adicionar o arquivo wildcard do Pi-Hole para o direcionamento do DNS com Traefik
-
-# Script para criar o arquivo .env com as variaveis de ambiente
-# Script para criar as pastas?
+networks:
+  homerrNet:
+    driver: bridge
