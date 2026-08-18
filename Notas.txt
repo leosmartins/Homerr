@@ -11,16 +11,3 @@
 
 # Script para criar o arquivo .env com as variaveis de ambiente
 # Script para criar as pastas?
-
-
-
-
-=====================
-ultima conversa com o copilot!
-
-Alguns pontos!
-
-O plex foi adicionado na rede, não é melhor deixar ele no modo host? e nesse caso, como conectar ele no traefik?
-Analisar portas mapeadas dos serviços, parece haver portas mapeadas iguais
-O que significa o bloco criado nas linhas 215-217
-O watchtower nao tem labels do traefik, pq?

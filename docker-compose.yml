@@ -5,15 +5,20 @@ x-common-env: &common-env
   PGID: "${PGID:-1000}"
   TZ: "${TZ:-America/Sao_Paulo}"
 
+networks:
+  homerrNet:
+    driver: bridge
+
 services:
+
   traefik:
     image: traefik:latest
     container_name: traefik
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
+      - "${TRAEFIK_PORT_HTTP:-80}:80"
+      - "${TRAEFIK_PORT_HTTPS:-443}:443"
+      - "${TRAEFIK_PORT_UI:-8080}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config/traefik/traefik.yml:/traefik.yml:ro
@@ -23,6 +28,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`homerr.traefik`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     networks:
       - homerrNet
@@ -32,7 +38,7 @@ services:
     container_name: homarr
     restart: unless-stopped
     ports:
-      - "7575:7575"
+      - "${HOMARR_PORT:-7575}:7575"
     volumes:
       - ./config/homarr:/app/data
     environment:
@@ -48,8 +54,6 @@ services:
     image: linuxserver/plex:latest
     container_name: plex
     restart: unless-stopped
-    ports:
-      - "32400:32400"
     environment:
       <<: *common-env
       PLEX_CLAIM: "${PLEX_CLAIM:-}"
@@ -60,18 +64,19 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.plex.rule=Host(`homerr.plex`)"
-      - "traefik.http.services.plex.loadbalancer.server.port=32400"
-    networks:
-      - homerrNet
+      - "traefik.http.services.plex.loadbalancer.server.url=http://host.docker.internal:32400"
+      - "traefik.http.services.plex.loadbalancer.server.scheme=http"
+    network_mode: host
 
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
     ports:
-      - "8989:8989"
+      - "${SONARR_PORT:-8989}:8989"
     environment:
       <<: *common-env
+      PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/sonarr:/config
       - ./downloads:/downloads
@@ -88,9 +93,11 @@ services:
     container_name: radarr
     restart: unless-stopped
     ports:
-      - "7878:7878"
+      - "${RADARR_PORT:-7878}:7878"
     environment:
       <<: *common-env
+      SONARR_HOST: "http://sonarr:8989"
+      PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/radarr:/config
       - ./downloads:/downloads
@@ -107,9 +114,11 @@ services:
     container_name: bazarr
     restart: unless-stopped
     ports:
-      - "6767:6767"
+      - "${BAZARR_PORT:-6767}:6767"
     environment:
       <<: *common-env
+      RADARR_HOST: "http://radarr:7878"
+      SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/bazarr:/config
       - ./media:/media
@@ -125,7 +134,7 @@ services:
     container_name: prowlarr
     restart: unless-stopped
     ports:
-      - "9696:9696"
+      - "${PROWLARR_PORT:-9696}:9696"
     environment:
       <<: *common-env
     volumes:
@@ -142,9 +151,11 @@ services:
     container_name: seerr
     restart: unless-stopped
     ports:
-      - "5055:5055"
+      - "${SEERR_PORT:-5055}:5055"
     environment:
       <<: *common-env
+      RADARR_HOST: "http://radarr:7878"
+      SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/seerr:/app/config
     labels:
@@ -159,9 +170,8 @@ services:
     container_name: qbittorrent
     restart: unless-stopped
     ports:
-      - "8080:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
+      - "${QBITTORRENT_PORT_TORRENT:-6881}:6881"
+      - "${QBITTORRENT_PORT_TORRENT:-6881}:6881/udp"
     environment:
       <<: *common-env
       WEBUI_PORT: "8080"
@@ -180,10 +190,9 @@ services:
     container_name: pihole
     restart: unless-stopped
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8081:80/tcp"
-      - "443:443/tcp"
+      - "${PIHOLE_PORT_DNS_TCP:-53}:53/tcp"
+      - "${PIHOLE_PORT_DNS_UDP:-53}:53/udp"
+      - "${PIHOLE_PORT_WEBUI:-8081}:80/tcp"
     environment:
       <<: *common-env
       TZ: "${TZ:-America/Sao_Paulo}"
@@ -208,10 +217,6 @@ services:
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "86400"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - homerrNet
-
-networks:
-  homerrNet:
-    driver: bridge
