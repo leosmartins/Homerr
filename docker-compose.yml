@@ -1,10 +1,12 @@
 name: homerr
 
+# Variáveis comuns
 x-common-env: &common-env
   PUID: "${PUID:-1000}"
   PGID: "${PGID:-1000}"
   TZ: "${TZ:-America/Sao_Paulo}"
 
+# Rede personalizada
 networks:
   homerrNet:
     driver: bridge
@@ -15,10 +17,14 @@ services:
     image: caddy:latest
     container_name: caddy
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "${CADDY_PORT_HTTP:-80}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # <--- Permite ao Caddy acessar o Plex (que está em modo host)
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./config/caddy/data:/data
       - ./config/caddy/config:/config
     networks:
@@ -31,9 +37,11 @@ services:
     ports:
       - "${HOMARR_PORT:-7575}:7575"
     volumes:
-      - ./config/homarr:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock # Opcional, apenas se você quiser integração com o Docker
+      - ./config/homarr:/appdata
     environment:
       <<: *common-env
+      SECRET_ENCRYPTION_KEY: "3b88b21c251b0fb440d5ba20ef20c618f1281c2cdd4d7734ccb1c50bcfab1627"
     networks:
       - homerrNet
 
@@ -41,6 +49,16 @@ services:
     image: linuxserver/plex:latest
     container_name: plex
     restart: unless-stopped
+    ports:
+      - "32400:32400/tcp"
+      - "3005:3005/tcp"
+      - "8324:8324/tcp"
+      - "32469:32469/tcp"
+      - "1900:1900/udp"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
     environment:
       <<: *common-env
       PLEX_CLAIM: "${PLEX_CLAIM:-}"
@@ -48,7 +66,8 @@ services:
       - ./config/plex:/config
       - ./media:/media
       - ./downloads:/downloads
-    network_mode: host
+    networks:
+      - homerrNet
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -132,8 +151,9 @@ services:
     container_name: qbittorrent
     restart: unless-stopped
     ports:
-      - "${QBITTORRENT_PORT_TORRENT:-6881}:6881"
-      - "${QBITTORRENT_PORT_TORRENT:-6881}:6881/udp"
+      - "${QBITTORRENT_PORT:-6881}:6881"
+      - "${QBITTORRENT_PORT:-6881}:6881/udp"
+      - "${QBITTORRENT_WEBUI:-9090}:8080"   # Teste -> porta interna 8080, porta externa 9090
     environment:
       <<: *common-env
       WEBUI_PORT: "8080"
@@ -153,24 +173,11 @@ services:
       - "${PIHOLE_PORT_WEBUI:-8081}:80/tcp"
     environment:
       <<: *common-env
-      TZ: "${TZ:-America/Sao_Paulo}"
       WEBPASSWORD: "${PIHOLE_PASSWORD:-admin}"
     volumes:
       - ./config/pihole/etc-pihole:/etc/pihole
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
     cap_add:
       - NET_ADMIN
-    networks:
-      - homerrNet
-
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: "86400"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - homerrNet
