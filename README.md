@@ -10,7 +10,7 @@ Homerr/
 ├── 📄 docker-compose.yml
 ├── 📄 .env
 ├── 📁 config/
-│   ├── 📁 traefik/
+│   ├── 📁 caddy/
 │   ├── 📁 homarr/
 │   ├── 📁 sonarr/
 │   ├── 📁 radarr/
@@ -44,7 +44,6 @@ Execute `scripts\setup_hosts.bat` como Administrador para adicionar rotas locais
 Isto adiciona ao `hosts`:
 
 ```
-127.0.0.1    homerr.traefik
 127.0.0.1    homerr.homarr
 127.0.0.1    homerr.plex
 127.0.0.1    homerr.sonarr
@@ -79,7 +78,7 @@ O Plex roda em `network_mode: host` para:
 
 **Acesso ao Plex:**
 - Local: `http://localhost:32400`
-- Traefik: `http://homerr.plex` (via `host.docker.internal`)
+- Caddy: `http://homerr.plex` (via `host.docker.internal`)
 - Remoto: `http://seu-ip:32400`
 
 ## Integrações entre Serviços
@@ -114,7 +113,7 @@ Estas variáveis são configuradas automaticamente no `docker-compose.yml` e usa
 
 | Nome | URL de Acesso | Descrição | Porta Interna | Modo Rede | Volumes |
 |------|---------------|-----------|---------------|-----------|---------|
-| **Traefik** | http://homerr.traefik:8080 | Reverse proxy e roteador | 8080 | Bridge | `/var/run/docker.sock`, `./config/traefik/` |
+| **Caddy** | http://homerr.* | Reverse proxy e roteador | 80 | Bridge | `./config/caddy/Caddyfile`, `./config/caddy/data` |
 | **Homarr** | http://homerr.homarr | Dashboard/Interface home | 7575 | Bridge | `./config/homarr:/app/data` |
 | **Plex** | http://homerr.plex | Media Server | 32400 | **Host** | `./config/plex:/config`, `./media:/media`, `./downloads:/downloads` |
 | **Sonarr** | http://homerr.sonarr | Gerenciador de séries TV | 8989 | Bridge | `./config/sonarr:/config`, `./downloads:/downloads`, `./media:/media` |
@@ -131,10 +130,9 @@ Estas variáveis são configuradas automaticamente no `docker-compose.yml` e usa
 Todas as portas mapeadas no host podem ser customizadas via arquivo `.env`:
 
 ```env
-# Traefik
-TRAEFIK_PORT_HTTP=80
-TRAEFIK_PORT_HTTPS=443
-TRAEFIK_PORT_UI=8080
+# Caddy
+CADDY_PORT_HTTP=80
+CADDY_PORT_HTTPS=443
 
 # Serviços
 HOMARR_PORT=7575
@@ -200,12 +198,9 @@ docker-compose exec radarr ping sonarr
 docker network inspect homerr-homerrnet
 ```
 
-### qBittorrent e Pi-hole inacessíveis na porta antiga
+### qBittorrent e Pi-hole
 
-- ❌ qBittorrent 8080: Removida (conflitava com traefik)
-- ❌ Pi-hole 443: Removida (conflitava com traefik)
-
-**Solução:** Acesse via Traefik:
+O painel web desses serviços é acessado pelo Caddy:
 - qBittorrent: `http://homerr.qbittorrent`
 - Pi-hole: `http://homerr.pihole`
 
@@ -214,8 +209,7 @@ docker network inspect homerr-homerrnet
 Se receber erro "port already in use", modifique as portas no `.env`:
 
 ```env
-TRAEFIK_PORT_HTTP=8000    # Ao invés de 80
-TRAEFIK_PORT_HTTPS=8443   # Ao invés de 443
+CADDY_PORT_HTTP=8000    # Ao invés de 80
 ```
 
 Depois restartar:
@@ -271,7 +265,7 @@ docker system prune -a
 > **⚠️ Segurança**
 > - Nunca commitar arquivo `.env` no git
 > - Usar senhas fortes no `.env` (especialmente `PIHOLE_PASSWORD`)
-> - Considerar usar HTTPS no Traefik em produção
+> - Considerar usar HTTPS no Caddy em produção
 > - Limitar acesso remoto conforme necessário
 
 > **💾 Dados**
@@ -281,5 +275,5 @@ docker system prune -a
 
 > **📡 Networking**
 > - Plex em host mode é a configuração recomendada
-> - Traefik funciona com todos os serviços via bridge
+> - Caddy funciona com todos os serviços via bridge
 > - Não é necessário bidirecionalidade nas integrações

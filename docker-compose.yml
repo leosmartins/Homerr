@@ -11,25 +11,16 @@ networks:
 
 services:
 
-  traefik:
-    image: traefik:latest
-    container_name: traefik
+  caddy:
+    image: caddy:latest
+    container_name: caddy
     restart: unless-stopped
     ports:
-      - "${TRAEFIK_PORT_HTTP:-80}:80"
-      - "${TRAEFIK_PORT_HTTPS:-443}:443"
-      - "${TRAEFIK_PORT_UI:-8080}:8080"
+      - "${CADDY_PORT_HTTP:-80}:80"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./config/traefik/traefik.yml:/traefik.yml:ro
-      - ./config/traefik/acme.json:/acme.json
-    environment:
-      <<: *common-env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`homerr.traefik`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/caddy/data:/data
+      - ./config/caddy/config:/config
     networks:
       - homerrNet
 
@@ -43,10 +34,6 @@ services:
       - ./config/homarr:/app/data
     environment:
       <<: *common-env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.homarr.rule=Host(`homerr.homarr`)"
-      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
     networks:
       - homerrNet
 
@@ -61,11 +48,6 @@ services:
       - ./config/plex:/config
       - ./media:/media
       - ./downloads:/downloads
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`homerr.plex`)"
-      - "traefik.http.services.plex.loadbalancer.server.url=http://host.docker.internal:32400"
-      - "traefik.http.services.plex.loadbalancer.server.scheme=http"
     network_mode: host
 
   sonarr:
@@ -81,10 +63,6 @@ services:
       - ./config/sonarr:/config
       - ./downloads:/downloads
       - ./media:/media
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`homerr.sonarr`)"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
     networks:
       - homerrNet
 
@@ -102,10 +80,6 @@ services:
       - ./config/radarr:/config
       - ./downloads:/downloads
       - ./media:/media
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`homerr.radarr`)"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
     networks:
       - homerrNet
 
@@ -122,10 +96,6 @@ services:
     volumes:
       - ./config/bazarr:/config
       - ./media:/media
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.rule=Host(`homerr.bazarr`)"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
     networks:
       - homerrNet
 
@@ -139,10 +109,6 @@ services:
       <<: *common-env
     volumes:
       - ./config/prowlarr:/config
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prowlarr.rule=Host(`homerr.prowlarr`)"
-      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
     networks:
       - homerrNet
 
@@ -158,10 +124,6 @@ services:
       SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/seerr:/app/config
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.seerr.rule=Host(`homerr.seerr`)"
-      - "traefik.http.services.seerr.loadbalancer.server.port=5055"
     networks:
       - homerrNet
 
@@ -178,10 +140,6 @@ services:
     volumes:
       - ./config/qbittorrent:/config
       - ./downloads:/downloads
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbittorrent.rule=Host(`homerr.qbittorrent`)"
-      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
     networks:
       - homerrNet
 
@@ -202,10 +160,6 @@ services:
       - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
     cap_add:
       - NET_ADMIN
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pihole.rule=Host(`homerr.pihole`)"
-      - "traefik.http.services.pihole.loadbalancer.server.port=80"
     networks:
       - homerrNet
 
