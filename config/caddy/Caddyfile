@@ -2,7 +2,9 @@
     auto_https off
 }
 
-# Com o intuito de realizar um teste de consumo do arquivo .env, o mesmo foi mapeado no container e será utilizado no serviço do qbit
+http://homerr.caddy {
+    respond "O Caddy esta UP!"
+}
 
 http://homerr.homarr {
     reverse_proxy homarr:7575
@@ -32,12 +34,8 @@ http://homerr.seerr {
     reverse_proxy seerr:5055
 }
 
-# http://homerr.qbittorrent {
-#    reverse_proxy qbittorrent:8080
-# }
-
 http://homerr.qbittorrent {
-    reverse_proxy qbittorrent:{$QBITTORRENT_WEBUI_PORT}
+    reverse_proxy qbittorrent:8080
 }
 
 http://homerr.pihole {

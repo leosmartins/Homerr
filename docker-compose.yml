@@ -61,7 +61,6 @@ services:
       - "32414:32414/udp"
     environment:
       <<: *common-env
-      PLEX_CLAIM: "${PLEX_CLAIM:-}"
     volumes:
       - ./config/plex:/config
       - ./media:/media
