@@ -169,15 +169,18 @@ services:
     ports:
       - "${PIHOLE_PORT_DNS_TCP:-53}:53/tcp"
       - "${PIHOLE_PORT_DNS_UDP:-53}:53/udp"
-      - "${PIHOLE_PORT_WEBUI:-8081}:80/tcp"
+      - "${PIHOLE_PORT_WEBUI:-8080}:80/tcp"
+      - "${PIHOLE_PORT_HTTPS:-443}:443/tcp"
     environment:
-      <<: *common-env
-      WEBPASSWORD: "${PIHOLE_PASSWORD:-admin}"
-      HOST_IP: "${HOST_IP}"
+      TZ: "${TZ:-America/Sao_Paulo}"
+      FTLCONF_webserver_api_password: '${PIHOLE_PASSWORD:-Admin@123}'
+      FTLCONF_dns_listeningMode: 'ALL'
+      FTLCONF_misc_etc_dnsmasq_d: 'true'
+      FTLCONF_misc_dnsmasq_lines: 'address=/homerr/${HOST_IP}'
     volumes:
-      - ./config/pihole/etc-pihole:/etc/pihole
-      - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+      - './config/pihole/etc-pihole:/etc/pihole'
+      - './config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
     cap_add:
-      - NET_ADMIN
+      - SYS_NICE
     networks:
       - homerrNet
