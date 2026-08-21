@@ -21,8 +21,6 @@ services:
       - .env
     ports:
       - "${CADDY_PORT_HTTP:-80}:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # <--- Permite ao Caddy acessar o Plex (que está em modo host)
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./config/caddy/data:/data
@@ -152,7 +150,7 @@ services:
     ports:
       - "${QBITTORRENT_PORT:-6881}:6881"
       - "${QBITTORRENT_PORT:-6881}:6881/udp"
-      - "${QBITTORRENT_WEBUI:-9090}:8080"   # Teste -> porta interna 8080, porta externa 9090
+      - "${QBITTORRENT_WEBUI:-9090}:8080"
     environment:
       <<: *common-env
       WEBUI_PORT: "8080"
@@ -182,5 +180,19 @@ services:
       - './config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
     cap_add:
       - SYS_NICE
+    networks:
+      - homerrNet
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    ports:
+      - "${FLARESOLVERR_PORT:-8191}:8191"
     networks:
       - homerrNet
