@@ -76,8 +76,8 @@ Caso queira adicionar um serviço novo ao servidor, é necessário adicionar a e
 
 
 ## Arquitetura do Servidor
-Para facilitar a visualização da arquitetura do servidor, foi criado um diagrama de fluxo, que mostra a relação entre os serviços e como eles se comunicam entre si -> [DIAGRAMA](DIAGRAMA.md)
+Para facilitar a visualização da arquitetura do servidor, foi criado um diagrama de fluxo, que mostra a relação entre os serviços e como eles se comunicam entre si -> [Diagrama](DIAGRAMA.md)
 
 
 ## Notas
-Arquivo contendo ideias para o projeto -> [NOTAS](NOTAS.md)
+Arquivo contendo ideias para o projeto -> [Notas](NOTAS.md)
