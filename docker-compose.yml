@@ -17,8 +17,6 @@ services:
     image: caddy:latest
     container_name: caddy
     restart: unless-stopped
-    env_file:
-      - .env
     ports:
       - "${CADDY_PORT_HTTP:-80}:80"
     volumes:
@@ -35,7 +33,7 @@ services:
     ports:
       - "${HOMARR_PORT:-7575}:7575"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Opcional, apenas se você quiser integração com o Docker
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./config/homarr:/appdata
     environment:
       <<: *common-env
