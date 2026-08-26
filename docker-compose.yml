@@ -1,135 +1,196 @@
 name: homerr
 
+# Variáveis comuns
 x-common-env: &common-env
   PUID: "${PUID:-1000}"
   PGID: "${PGID:-1000}"
   TZ: "${TZ:-America/Sao_Paulo}"
 
+# Rede personalizada
+networks:
+  homerrNet:
+    driver: bridge
+
 services:
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "${CADDY_PORT_HTTP:-80}:80"
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/caddy/data:/data
+      - ./config/caddy/config:/config
+    networks:
+      - homerrNet
+
   homarr:
     image: ghcr.io/homarr-labs/homarr:latest
     container_name: homarr
     restart: unless-stopped
     ports:
-      - "7575:7575"
+      - "${HOMARR_PORT:-7575}:7575"
     volumes:
-      - ./config/homarr:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/homarr:/appdata
     environment:
       <<: *common-env
+      SECRET_ENCRYPTION_KEY: "3b88b21c251b0fb440d5ba20ef20c618f1281c2cdd4d7734ccb1c50bcfab1627"
+    networks:
+      - homerrNet
 
   plex:
     image: linuxserver/plex:latest
     container_name: plex
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "32400:32400/tcp"
+      - "3005:3005/tcp"
+      - "8324:8324/tcp"
+      - "32469:32469/tcp"
+      - "1900:1900/udp"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
     environment:
       <<: *common-env
-      PLEX_CLAIM: "${PLEX_CLAIM:-}"
     volumes:
       - ./config/plex:/config
       - ./media:/media
       - ./downloads:/downloads
+    networks:
+      - homerrNet
 
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
     ports:
-      - "8989:8989"
+      - "${SONARR_PORT:-8989}:8989"
     environment:
       <<: *common-env
+      PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/sonarr:/config
       - ./downloads:/downloads
       - ./media:/media
+    networks:
+      - homerrNet
 
   radarr:
     image: linuxserver/radarr:latest
     container_name: radarr
     restart: unless-stopped
     ports:
-      - "7878:7878"
+      - "${RADARR_PORT:-7878}:7878"
     environment:
       <<: *common-env
+      SONARR_HOST: "http://sonarr:8989"
+      PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/radarr:/config
       - ./downloads:/downloads
       - ./media:/media
+    networks:
+      - homerrNet
 
   bazarr:
     image: linuxserver/bazarr:latest
     container_name: bazarr
     restart: unless-stopped
     ports:
-      - "6767:6767"
+      - "${BAZARR_PORT:-6767}:6767"
     environment:
       <<: *common-env
+      RADARR_HOST: "http://radarr:7878"
+      SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/bazarr:/config
       - ./media:/media
+    networks:
+      - homerrNet
 
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: unless-stopped
     ports:
-      - "9696:9696"
+      - "${PROWLARR_PORT:-9696}:9696"
     environment:
       <<: *common-env
     volumes:
       - ./config/prowlarr:/config
+    networks:
+      - homerrNet
 
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
     restart: unless-stopped
     ports:
-      - "5055:5055"
+      - "${SEERR_PORT:-5055}:5055"
     environment:
       <<: *common-env
+      RADARR_HOST: "http://radarr:7878"
+      SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/seerr:/app/config
+    networks:
+      - homerrNet
 
   qbittorrent:
     image: linuxserver/qbittorrent:latest
     container_name: qbittorrent
     restart: unless-stopped
     ports:
-      - "8080:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
+      - "${QBITTORRENT_PORT:-6881}:6881"
+      - "${QBITTORRENT_PORT:-6881}:6881/udp"
+      - "${QBITTORRENT_WEBUI:-9090}:8080"
     environment:
       <<: *common-env
       WEBUI_PORT: "8080"
     volumes:
       - ./config/qbittorrent:/config
       - ./downloads:/downloads
+    networks:
+      - homerrNet
 
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
     restart: unless-stopped
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8081:80/tcp"
-      - "443:443/tcp"
+      - "${PIHOLE_PORT_DNS_TCP:-53}:53/tcp"
+      - "${PIHOLE_PORT_DNS_UDP:-53}:53/udp"
+      - "${PIHOLE_PORT_WEBUI:-8080}:80/tcp"
+      - "${PIHOLE_PORT_HTTPS:-443}:443/tcp"
     environment:
-      <<: *common-env
       TZ: "${TZ:-America/Sao_Paulo}"
-      WEBPASSWORD: "${PIHOLE_PASSWORD:-admin}"
+      FTLCONF_webserver_api_password: '${PIHOLE_PASSWORD:-Admin@123}'
+      FTLCONF_dns_listeningMode: 'ALL'
+      FTLCONF_misc_etc_dnsmasq_d: 'true'
+      FTLCONF_misc_dnsmasq_lines: 'address=/homerr/${HOST_IP}'
     volumes:
-      - ./config/pihole/etc-pihole:/etc/pihole
-      - ./config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+      - './config/pihole/etc-pihole:/etc/pihole'
+      - './config/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
     cap_add:
-      - NET_ADMIN
+      - SYS_NICE
+    networks:
+      - homerrNet
 
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
     restart: unless-stopped
     environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: "86400"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - TZ=America/Sao_Paulo
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    ports:
+      - "${FLARESOLVERR_PORT:-8191}:8191"
+    networks:
+      - homerrNet

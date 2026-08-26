@@ -1,0 +1,52 @@
+{
+    auto_https off
+}
+
+http://localhost {
+    respond "O Caddy esta UP!
+Agora tente acessar através do proxy reverso http://caddy.homerr"
+}
+
+http://caddy.homerr {
+    respond "O Caddy esta UP!"
+}
+
+http://homarr.homerr {
+    reverse_proxy homarr:7575
+}
+
+http://plex.homerr {
+    reverse_proxy plex:32400
+}
+
+http://sonarr.homerr {
+    reverse_proxy sonarr:8989
+}
+
+http://radarr.homerr {
+    reverse_proxy radarr:7878
+}
+
+http://bazarr.homerr {
+    reverse_proxy bazarr:6767
+}
+
+http://prowlarr.homerr {
+    reverse_proxy prowlarr:9696
+}
+
+http://seerr.homerr {
+    reverse_proxy seerr:5055
+}
+
+http://qbittorrent.homerr {
+    reverse_proxy qbittorrent:8080
+}
+
+http://pihole.homerr {
+    reverse_proxy pihole:80
+}
+
+http://flaresolverr.homerr {
+    reverse_proxy flaresolverr:8191
+}
