@@ -57,10 +57,10 @@ services:
       - "32414:32414/udp"
     environment:
       <<: *common-env
+      PLEX_CLAIM: "${PLEX_CLAIM}"
     volumes:
       - ./config/plex:/config
-      - ./media:/media
-      - ./downloads:/downloads
+      - ./data/media:/media
     networks:
       - homerrNet
 
@@ -75,8 +75,8 @@ services:
       PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/sonarr:/config
-      - ./downloads:/downloads
-      - ./media:/media
+      - ./data/downloads:/downloads
+      - ./data/media:/media
     networks:
       - homerrNet
 
@@ -92,8 +92,8 @@ services:
       PROWLARR_HOST: "http://prowlarr:9696"
     volumes:
       - ./config/radarr:/config
-      - ./downloads:/downloads
-      - ./media:/media
+      - ./data/downloads:/downloads
+      - ./data/media:/media
     networks:
       - homerrNet
 
@@ -109,7 +109,7 @@ services:
       SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/bazarr:/config
-      - ./media:/media
+      - ./data/media:/media
     networks:
       - homerrNet
 
@@ -154,7 +154,7 @@ services:
       WEBUI_PORT: "8080"
     volumes:
       - ./config/qbittorrent:/config
-      - ./downloads:/downloads
+      - ./data/downloads:/downloads
     networks:
       - homerrNet
 
