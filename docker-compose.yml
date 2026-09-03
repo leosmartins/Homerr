@@ -46,18 +46,19 @@ services:
     container_name: plex
     restart: unless-stopped
     ports:
-      - "32400:32400/tcp"
-      - "3005:3005/tcp"
-      - "8324:8324/tcp"
-      - "32469:32469/tcp"
-      - "1900:1900/udp"
-      - "32410:32410/udp"
-      - "32412:32412/udp"
-      - "32413:32413/udp"
-      - "32414:32414/udp"
+      - "${PLEX_PORT_WEBUI}:32400/tcp"
+      - "${PLEX_PORT_DLNA_TCP}:32469/tcp"
+      - "${PLEX_PORT_DLNA_UDP}:1900/udp"
+      - "${PLEX_PORT_COMPANION}:8324/tcp"
+      - "${PLEX_PORT_OTHER}:5353/udp"
+      - "${PLEX_PORT_GDM01}:32410/udp"
+      - "${PLEX_PORT_GDM02}:32412/udp"
+      - "${PLEX_PORT_GDM03}:32413/udp"
+      - "${PLEX_PORT_GDM04}:32414/udp"
     environment:
       <<: *common-env
       PLEX_CLAIM: "${PLEX_CLAIM}"
+      VERSION: "${PLEX_VERSION:-docker"
     volumes:
       - ./config/plex:/config
       - ./data/media:/media
