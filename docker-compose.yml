@@ -58,7 +58,7 @@ services:
     environment:
       <<: *common-env
       PLEX_CLAIM: "${PLEX_CLAIM}"
-      VERSION: "${PLEX_VERSION:-docker"
+      VERSION: "${PLEX_VERSION:-docker}"
     volumes:
       - ./config/plex:/config
       - ./data/media:/media
@@ -139,6 +139,17 @@ services:
       SONARR_HOST: "http://sonarr:8989"
     volumes:
       - ./config/seerr:/app/config
+    networks:
+      - homerrNet
+
+  watcharr:
+    image: ghcr.io/sbondco/watcharr:latest
+    container_name: watcharr
+    restart: unless-stopped
+    ports:
+      - "${WATCHARR_PORT:-3080}:3080"
+    volumes:
+      - ./config/watcharr:/data
     networks:
       - homerrNet
 
