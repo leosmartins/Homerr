@@ -206,3 +206,16 @@ services:
       - "${FLARESOLVERR_PORT:-8191}:8191"
     networks:
       - homerrNet
+  
+  whatsupdocker:
+    image: getwud/wud
+    container_name: wud
+    environment:
+      - WUD_AUTH_ADMIN_USER=admin
+      - WUD_AUTH_ADMIN_PASSWORD=Admin123
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${WUD_PORT:-3000}:3000"
+    networks:
+      - homerrNet
