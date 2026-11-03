@@ -1,4 +1,9 @@
 # Homerr
+
+<div align=center>
+    <img width="183" height="191" alt="Homer impson" src="https://github.com/user-attachments/assets/15b5f2c8-5437-4fed-a5bd-3e19c143e562" />
+</div>
+
 IaC para um servidor caseiro, com diversas aplicações, variando de mídia até IoT.</br>
 Com serviços pré-configurados para proxy reverso e resoluçao de DNS local, mantendo uma estrutura limpa e organizada, facilitando a manutenção, gerenciamento e expansão do servidor.
 
